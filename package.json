@@ -21,5 +21,10 @@
   "bugs": {
     "url": "https://github.com/lokesh1197/express-oath/issues"
   },
-  "homepage": "https://github.com/lokesh1197/express-oath#readme"
+  "homepage": "https://github.com/lokesh1197/express-oath#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mysql": "^2.17.1",
+    "node-oauth2-server": "^2.4.0"
+  }
 }
