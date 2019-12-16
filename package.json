@@ -1,0 +1,25 @@
+{
+  "name": "express-oath",
+  "version": "1.0.0",
+  "description": "A simple server using Express, oAuth and MySql",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/lokesh1197/express-oath.git"
+  },
+  "keywords": [
+    "Node.js",
+    "Express",
+    "oAuth",
+    "MySql"
+  ],
+  "author": "Lokesh Mohanty",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lokesh1197/express-oath/issues"
+  },
+  "homepage": "https://github.com/lokesh1197/express-oath#readme"
+}
