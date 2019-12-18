@@ -2,12 +2,14 @@ import express from 'express';
 import oAuth2Server from 'oauth2-server';
 import * as mysql from 'mysql';
 import { authModel } from './models';
+import { UserController } from './controllers';
 
 interface expressApplicationWithOauth extends express.Application {
     oauth?: any
 }
 
 const app: expressApplicationWithOauth = express();
+const router: any = express.Router();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.oauth = new oAuth2Server({
@@ -22,7 +24,15 @@ app.oauth = new oAuth2Server({
 //   continueAfterResponse: false
 });
 
-const port: number = Number(process.argv[2]) | 8000;
+const user: any = new UserController(app);
+// app.use('/auth', user);
+app.get('/', function(req, res) {
+  console.log("Hi");
+});
+
+
+
+const port: number = Number(process.argv[2]) | 8080;
 app.listen(port,
     (): void => console.log(`app listening on port ${port}`)
 )
