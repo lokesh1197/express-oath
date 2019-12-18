@@ -5,8 +5,10 @@
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --inspect -r source-map-support/register .",
-    "debug": "nodemon start"
+    "start": "ts-node src/index.ts",
+    "debug": "nodemon start",
+    "build": "tsc",
+    "prod": "tsc && node dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -34,9 +36,7 @@
     "oauth2-server": "^3.0.1"
   },
   "nodemonConfig": {
-    "watch": [
-      "src"
-    ],
+    "watch": ["src"],
     "ext": "ts",
     "exec": "npm start"
   },
