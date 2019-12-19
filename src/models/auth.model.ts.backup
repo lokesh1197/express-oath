@@ -1,0 +1,48 @@
+export class AuthModel {
+    constructor (protected userService: any, protected tokenService: any) {}
+
+    getAccessToken (bearerToken: any) {
+        return this.tokenService.getIDFromBearerToken(bearerToken, 'access_token', (result: any) => {
+            const token = result[0];
+            return {
+                accessToken: token.accessToken,
+                client: { id: token.clientid },
+                user: { id: token.userid },
+                expires: token.expires,
+            };
+        });
+    }
+
+    getClient (clientId: any, clientSecret: any) {
+        return this.userService.getClient(clientId, clientSecret, (result: any) => {
+            const client = result[0];
+            if (!client) return;
+            return {
+                clientId: client.clientid,
+                clientSecret: client.client_secret,
+                grants: ['password'],
+            };
+        });
+    }
+
+    getRefreshToken (bearerToken: any) {
+        return this.tokenService.getIDFromBearerToken(bearerToken, 'refresh_token', (result: any) => {
+            return result[0];
+        });
+    }
+
+    getUser (username: string, password: string) {
+        return this.userService.get(username, password, (result: any) => {
+            return result[0];
+        });
+    }
+    verifyScope(token: any, scope: string | string[], callback?: Function): any {
+        return true;
+    }
+
+    saveToken (token: any, client: any, user: any) {
+        return this.tokenService.saveAccessToken(token, client.id, user.id, (result: any) => {
+            return result[0];
+        });
+    }
+}

@@ -1,147 +1,64 @@
-import * as oauth from 'oauth2-server';
+import { errorHandler } from '../decorator';
 
-export const authModel: oauth.AuthorizationCodeModel | oauth.ClientCredentialsModel | oauth.RefreshTokenModel | oauth.PasswordModel= {
-    /**
-     * 
-     * @param bearerToken 
-     * @param callback (error, accessToken: object)
-     */
-    async getAccessToken(accessToken: string, callback?: oauth.Callback<oauth.Token>): Promise<oauth.Token | oauth.Falsey> {
-        return Promise.resolve(null);
-    },
+@errorHandler()
+export class AuthModel {
+    constructor(protected userService: any, protected tokenService: any) {}
 
-    /**
-     * 
-     * @param clientId 
-     * @param clientSecret 
-     * @param callback  (error, client: object)
-     *  client is saved in req.client
-     */
-    async getClient (clientId: string, clientSecret: string | null, callback: oauth.Callback<oauth.Client | oauth.Falsey>): Promise<oauth.Client | oauth.Falsey> {
-        return Promise.resolve(null);
-    },
+    getAccessToken = async (bearerToken: any) => {
+        const token = await this.tokenService.getIDFromBearerToken(bearerToken, 'access_token');
+        const user = await this.userService.getUserByID(token.userId);
+        delete user.password;
+        return {
+            accessToken: token.accessToken,
+            accessTokenExpiresAt: token.accessTokenExpiresAt,
+            client: { id: token.clientid, grants: ['password'] },
+            user,
+            scope: 'basic',
+        };
+    };
 
-    // /**
-    //  * 
-    //  * @param clientId 
-    //  * @param grantType 
-    //  * @param callback (error, allowed: boolean)
-    //  */
-    // async grantTypeAllowed (clientId: string, grantType: string, callback: oauth.Callback<oauth.Client | oauth.Falsey>): Promise<oauth.Client | oauth.Falsey> {
-    //     return Promise.resolve(null);
-    // },
+    getClient = async (clientId: any, clientSecret: any) => {
+        const client = await this.userService.getClient(clientId, clientSecret);
+        if (!client)
+            return false;
+        return {
+            id: client.clientid,
+            clientSecret: client.client_secret,
+            redirectUris: client.redirectUris,
+            grants: ['password'],
+        };
+    };
 
-    // /**
-    //  * 
-    //  * @param accessToken 
-    //  * @param clientId 
-    //  * @param expires 
-    //  * @param user 
-    //  * @param callback (error)
-    //  */
-    // async saveAccessToken (accessToken: string, clientId: string, expires: Date, user: object, callback: oauth.Callback<oauth.Client | oauth.Falsey>): Promise<oauth.Token | oauth.Falsey> {
-    //     return Promise.resolve(null);
-    // },
-    async saveToken(token: oauth.Token, client: oauth.Client, user: oauth.User, callback?: oauth.Callback<oauth.Token>): Promise<oauth.Token | oauth.Falsey> {
-        return Promise.resolve(null);
-    },
+    // getRefreshToken : (bearerToken: any) => {
+    //     return this.tokenService.getIDFromBearerToken(bearerToken, 'refresh_token');
+    // };
 
-    // For authorization_code grant type
-    
-    // /**
-    //  * 
-    //  * @param authCode 
-    //  * @param callback (error, authCode: object)
-    //  */
-    // async getAuthCode (authCode: string, callback: oauth.Callback<oauth.Client | oauth.Falsey>): Promise<oauth.Token | oauth.Falsey> {
-    //     return Promise.resolve(null);
-    // },
+    getUser = async (username: string, password: string) => {
+        const user = await this.userService.getUser(username, password);
+        delete user.password;
+        return user;
+    };
+    verifyScope = async (token: any, scope: string | string[], callback?: Function) => {
+        return true;
+    };
 
-    // /**
-    //  * 
-    //  * @param authCode 
-    //  * @param clientId 
-    //  * @param expires 
-    //  * @param callback (error)
-    //  */
-    // async saveAuthCode (authCode: string, clientId: string, expires: Date, callback: oauth.Callback<oauth.Client | oauth.Falsey>) : Promise<oauth.Token | oauth.Falsey> {
-    //     return Promise.resolve(null);
-    // },
-
-    // For password grant type
-
-    /**
-     * 
-     * @param username 
-     * @param password 
-     * @param callback (error, user: object)
-     */
-    async getUser (username: string, password: string, callback: oauth.Callback<oauth.User | oauth.Falsey>) : Promise<oauth.User | oauth.Falsey> {
-        return Promise.resolve(null);
-    },
-
-    // For refresh_token grant type
-
-    // /**
-    //  * 
-    //  * @param refreshToken 
-    //  * @param clientId 
-    //  * @param expires 
-    //  * @param user 
-    //  * @param callback (error)
-    //  */
-    // async saveRefreshToken (refreshToken: string, clientId: string, expires: Date, user: object, callback: oauth.Callback<oauth.Client | oauth.Falsey>): Promise<oauth.Token | oauth.Falsey> {
-    //     return Promise.resolve(null);
-    // },
-
-    async verifyScope(token: oauth.Token, scope: string | string[], callback?: oauth.Callback<boolean>): Promise<boolean> {
-        return Promise.resolve(true);
-    },
-
-    /**
-     * 
-     * @param refreshToken 
-     * @param callback (error, refreshToken: object)
-     */
-    async getRefreshToken(refreshToken: string, callback?: oauth.Callback<oauth.RefreshToken>): Promise<oauth.RefreshToken | oauth.Falsey> {
-        return Promise.resolve(null);
-    },
-
-    // Optional for refresh_token
-
-    // /**
-    //  * 
-    //  * @param refreshToken 
-    //  * @param callback (error)
-    //  */
-    // async revokeRefreshtoken (refreshToken: string, callback: oauth.Callback<oauth.Client | oauth.Falsey>): Promise<oauth.Token | oauth.Falsey> {
-    //     return Promise.resolve(null);
-    // },
+    saveToken = async (token: any, client: any, user: any) => {
+        const newToken = this.tokenService.saveAccessToken(token, client.clientid, user.userid);
+        delete user.password;
+        return {
+            accessToken: token.accessToken,
+            accessTokenExpiresAt: token.accessTokenExpiresAt,
+            refreshToken: token.refreshToken,
+            refreshTokenExpiresAt: token.refreshTokenExpiresAt,
+            client,
+            scope: token.scope,
+            user,
+        };
+    };
 
 
-    // For client_credentials grant type
+    // generateAccessToken = () => Promise.resolve(uuid.v4());
 
-    /**
-     * 
-     * @param clientId 
-     * @param clientSecret 
-     * @param callback (error, user: object)
-     */
-    async getUserFromClient (client: oauth.Client, callback: oauth.Callback<oauth.User | oauth.Falsey>): Promise<oauth.User | oauth.Falsey> {
-        return Promise.resolve(null);
-    },
-    // async getUserFromClient (clientId: string, clientSecret: string, callback: oauth.Callback<oauth.Client | oauth.Falsey>): Promise<oauth.Token | oauth.Falsey> {
-    //     return Promise.resolve(null);
-    // },
+    // generateRefreshToken = () => Promise.resolve(uuid.v4());
 
-    // Optional for client_credentials
-    // /**
-    //  * 
-    //  * @param type accessToken or refreshToken
-    //  * @param req current express request
-    //  * @param callback (error, token: string | object | null): string->success, object->reissue, null->revert to default token generator
-    //  */
-    // async generateToken (type: string, req: object, callback: oauth.Callback<oauth.Client | oauth.Falsey>): Promise<oauth.Token | oauth.Falsey> {
-    //     return Promise.resolve(null);
-    // },
-};
+}

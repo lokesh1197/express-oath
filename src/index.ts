@@ -1,35 +1,49 @@
 import express from 'express';
-import oAuth2Server from 'oauth2-server';
-import * as mysql from 'mysql';
-import { authModel } from './models';
+import oauthServer from 'express-oauth-server';
+import mysql from 'mysql';
+import { MySqlDB, UserService, AccessTokenService } from './services';
+import { AuthModel } from './models/auth.model';
 import { UserController } from './controllers';
 
-interface expressApplicationWithOauth extends express.Application {
-    oauth?: any
-}
+const mysqlDBHelper = new MySqlDB(mysql);
+const userService = new UserService(mysqlDBHelper);
+const accessTokenService = new AccessTokenService(mysqlDBHelper);
 
-const app: expressApplicationWithOauth = express();
-const router: any = express.Router();
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-app.oauth = new oAuth2Server({
+const app: express.Application = express();
+// const router: any = express.Router();
+
+const authModel = new AuthModel(userService, accessTokenService);
+const oauth = new oauthServer({
   model: authModel,
-//   grants: ['password', 'authorization_code', 'refresh_token', 'client_credentials'],
-//   debug: true, // function can be passed, first arguement will be the error
-  accessTokenLifetime: 3600, // default 3600
-//   refrestTokenLifetime: 1209600, // if null -> tokens never expire, default: 1209600
-//   authCodeLifetime: 30, // default 30
-//   clientIDRegex: /^[a-z0-9-_]{3,40}$/i, // default
-//   passthroughErrors: false,
-//   continueAfterResponse: false
 });
 
-const user: any = new UserController(app);
-// app.use('/auth', user);
-app.get('/', function(req, res) {
-  console.log("Hi");
-});
+app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
+// app.post('/oauth/authorize', app.oauth.authorize());
+// app.use(app.oauth.errorHandler());
 
+const userController: any = new UserController(app, userService, oauth);
+
+// const ensureAuth = () => [
+//   oauth.authenticate(),
+//   (req: any, res: any, next: any) => {
+//     // simplify access to authenticated user
+//     req.user = (res as any).locals.oauth.token.user || undefined;
+//     req.scope = (res as any).locals.oauth.token.scope || undefined;
+//     req.token = (res as any).locals.oauth.token.accessToken || undefined;
+//     next();
+//   },
+// ];
+
+// // public
+// app.get('/', (_req, res) => res.json({ hello: 'world' }));
+// app.get('/__health', (_req, res) => res.json({ status: 'alive' }));
+// app.post('/oauth/token', oauth.token());
+
+// // private
+// app.get('/v1/user/me', ensureAuth(), (req: any, res: any) => res.json({Hi: 'me'}));
+// app.get('/v1/client/:id', ensureAuth(), (_req: any, res: any) => res.json({ client: 'alive' }));
+// app.post('/v1/client', ensureAuth(), (_req: any, res: any) => res.json({ status: 'client' }));
 
 
 const port: number = Number(process.argv[2]) | 8080;
